@@ -76,13 +76,13 @@ jobs:
 
       - name: Push new tag if not exists
         if: steps.upstream_tag.outputs.tag != ''
-        env:
-          UPSTREAM_TOKEN: ${{ secrets.UPSTREAM_TOKEN }}
         run: |
           UPSTREAM_TAG="${{ steps.upstream_tag.outputs.tag }}"
           if git ls-remote --tags origin | grep -q "refs/tags/$UPSTREAM_TAG"; then
             echo "Tag $UPSTREAM_TAG already exists, skipping."
           else
+            # 创建轻量 tag 指向当前 master（合并后的最新 commit）
+            git tag -f "$UPSTREAM_TAG"
             git push origin "refs/tags/$UPSTREAM_TAG"
             echo "Pushed tag $UPSTREAM_TAG"
           fi
