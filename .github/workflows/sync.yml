@@ -76,6 +76,8 @@ jobs:
 
       - name: Push new tag if not exists
         if: steps.upstream_tag.outputs.tag != ''
+        env:
+          UPSTREAM_TOKEN: ${{ secrets.UPSTREAM_TOKEN }}
         run: |
           UPSTREAM_TAG="${{ steps.upstream_tag.outputs.tag }}"
           if git ls-remote --tags origin | grep -q "refs/tags/$UPSTREAM_TAG"; then
