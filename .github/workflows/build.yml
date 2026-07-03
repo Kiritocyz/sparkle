@@ -10,7 +10,7 @@ on:
     branches:
       - master
     tags:
-      - v*
+      - '[0-9]*'
     paths-ignore:
       - 'README.md'
       - '.github/ISSUE_TEMPLATE/**'
@@ -218,8 +218,7 @@ jobs:
           REPO_PATH="${UPSTREAM_REPO#https://github.com/}"
           REPO_PATH="${REPO_PATH#git@github.com:}"
           REPO_PATH="${REPO_PATH%.git}"
-          ORIGINAL_TAG="${{ github.event.inputs.version || github.ref_name }}"
-          TAG="${ORIGINAL_TAG#v}"
+          TAG="${{ github.event.inputs.version || github.ref_name }}"
           RELEASE_DATA=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
             "https://api.github.com/repos/$REPO_PATH/releases/tags/$TAG")
           BODY=$(echo "$RELEASE_DATA" | jq -r '.body // empty')
@@ -227,11 +226,6 @@ jobs:
             echo '# 更新日志' > changelog.md
           else
             BODY="${BODY//xishang0128/Kiritocyz}"
-            # 如果原始 tag 带 v 前缀，替换 body 中的链接 tag 版本
-            if [[ "$ORIGINAL_TAG" == v* ]]; then
-              BODY=$(echo "$BODY" | sed "s|/tag/$TAG|/tag/v$TAG|g")
-              BODY=$(echo "$BODY" | sed "s|/download/$TAG|/download/v$TAG|g")
-            fi
             echo "$BODY" > changelog.md
           fi
 
@@ -308,7 +302,7 @@ jobs:
           prerelease: true
 
   release:
-    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && github.event.inputs.version != '')
+    if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && github.event.inputs.version != '')
     needs: [build]
     runs-on: ubuntu-latest
     steps:
