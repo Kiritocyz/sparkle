@@ -197,11 +197,31 @@ jobs:
             7z a $_.FullName PORTABLE
           }
 
-      - name: Create Changelog
+      # - name: Create Changelog
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: |
+      #     git log -1 --pretty=format:"%s%n%b" > changelog.md
+
+      - name: Get Upstream Release Body
         env:
+          UPSTREAM_REPO: ${{ vars.UPSTREAM_REPO }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git log -1 --pretty=format:"%s%n%b" > changelog.md
+          REPO_PATH="${UPSTREAM_REPO#https://github.com/}"
+          REPO_PATH="${REPO_PATH#git@github.com:}"
+          REPO_PATH="${REPO_PATH%.git}"
+          TAG="${{ github.event.inputs.version || github.ref_name }}"
+          TAG="${TAG#v}"
+          RELEASE_DATA=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
+            "https://api.github.com/repos/$REPO_PATH/releases/tags/$TAG")
+          BODY=$(echo "$RELEASE_DATA" | jq -r '.body // empty')
+          if [ -z "$BODY" ]; then
+            echo '# 更新日志' > changelog.md
+          else
+            BODY="${BODY//xishang0128/Kiritocyz}"
+            echo "$BODY" > changelog.md
+          fi
 
       - name: Generate latest.yml
         shell: bash
@@ -272,37 +292,37 @@ jobs:
         with:
           node-version: 25
 
-      - name: Generate Changelog
-        env:
-          API_URL: ${{ secrets.API_URL }}
-          API_KEY: ${{ secrets.API_KEY }}
-        run: |
-          TEXT=$(git log $(jq -r .version package.json)..HEAD --pretty=format:%s | grep -v '[0-9]\+\.[0-9]\+\.[0-9]\+$' | sed ':a;N;$!ba;s/\n/\\n/g')
-          QUESTION="Translate into Chinese:\n"""\n$TEXT\n""""
-          PAYLOAD=$(cat <<EOF
-          {
-            "stream": false,
-            "model": "gpt-5-mini",
-            "messages": [
-              {
-                "role": "system",
-                "content": "You are a professional translation engine, please translate the text into a colloquial, professional, elegant and fluent content, without the style of machine translation. You must only translate the text content, never interpret it."
-              },
-              {
-                "role": "user",
-                "content": "$QUESTION"
-              }
-            ]
-          }
-          EOF
-          )
-          RESPONSE=$(curl -s -X POST "$API_URL/v1/chat/completions" \
-            -H "Authorization: Bearer $API_KEY" \
-            -H "Content-Type: application/json" \
-            -d "$PAYLOAD" \
-            --max-time 30)
-          echo '# 更新日志' > changelog.md
-          echo $RESPONSE | jq .choices[0].message.content -r | sed 's/\\n/\n/g' | sed 's/^/ - /g' >> changelog.md
+      # - name: Generate Changelog
+      #   env:
+      #     API_URL: ${{ secrets.API_URL }}
+      #     API_KEY: ${{ secrets.API_KEY }}
+      #   run: |
+      #     TEXT=$(git log $(jq -r .version package.json)..HEAD --pretty=format:%s | grep -v '[0-9]\+\.[0-9]\+\.[0-9]\+$' | sed ':a;N;$!ba;s/\n/\\n/g')
+      #     QUESTION="Translate into Chinese:\n"""\n$TEXT\n""""
+      #     PAYLOAD=$(cat <<EOF
+      #     {
+      #       "stream": false,
+      #       "model": "gpt-5-mini",
+      #       "messages": [
+      #         {
+      #           "role": "system",
+      #           "content": "You are a professional translation engine, please translate the text into a colloquial, professional, elegant and fluent content, without the style of machine translation. You must only translate the text content, never interpret it."
+      #         },
+      #         {
+      #           "role": "user",
+      #           "content": "$QUESTION"
+      #         }
+      #       ]
+      #     }
+      #     EOF
+      #     )
+      #     RESPONSE=$(curl -s -X POST "$API_URL/v1/chat/completions" \
+      #       -H "Authorization: Bearer $API_KEY" \
+      #       -H "Content-Type: application/json" \
+      #       -d "$PAYLOAD" \
+      #       --max-time 30)
+      #     echo '# 更新日志' > changelog.md
+      #     echo $RESPONSE | jq .choices[0].message.content -r | sed 's/\\n/\n/g' | sed 's/^/ - /g' >> changelog.md
 
       - name: Update Version
         run: |
