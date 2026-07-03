@@ -42,7 +42,7 @@ jobs:
           UPSTREAM_REPO="${{ vars.UPSTREAM_REPO }}"
           if [ -z "$UPSTREAM_REPO" ]; then exit 0; fi
           git checkout master
-          git merge upstream/master --no-edit || git merge --strategy=recursive --strategy-option=theirs upstream/master
+          git merge upstream/master --no-edit || git merge --strategy=recursive --strategy-option=ours upstream/master
 
       - name: Get upstream latest tag
         id: upstream_tag

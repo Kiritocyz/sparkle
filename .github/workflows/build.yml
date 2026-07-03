@@ -15,6 +15,7 @@ on:
       - 'README.md'
       - '.github/ISSUE_TEMPLATE/**'
       - '.github/workflows/issues.yml'
+      - '.github/workflows/sync.yml'
 
 jobs:
   build:
