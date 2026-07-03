@@ -78,11 +78,9 @@ jobs:
         if: steps.upstream_tag.outputs.tag != ''
         run: |
           UPSTREAM_TAG="${{ steps.upstream_tag.outputs.tag }}"
-          LOCAL_TAG="$UPSTREAM_TAG"
-          if git ls-remote --tags origin | grep -q "refs/tags/$LOCAL_TAG"; then
-            echo "Tag $LOCAL_TAG already exists, skipping."
+          if git ls-remote --tags origin | grep -q "refs/tags/$UPSTREAM_TAG"; then
+            echo "Tag $UPSTREAM_TAG already exists, skipping."
           else
-            git tag "$LOCAL_TAG"
-            git push origin "$LOCAL_TAG"
-            echo "Pushed tag $LOCAL_TAG"
+            git push origin "refs/tags/$UPSTREAM_TAG"
+            echo "Pushed tag $UPSTREAM_TAG"
           fi
