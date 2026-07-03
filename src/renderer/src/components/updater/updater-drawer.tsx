@@ -79,8 +79,8 @@ const UpdaterDrawer: React.FC<Props> = (props) => {
 
   const isDownloading = updateStatus?.downloading || downloading
   const releaseUrl = version.includes('beta')
-    ? 'https://github.com/xishang0128/sparkle/releases/tag/pre-release'
-    : `https://github.com/xishang0128/sparkle/releases/tag/${version}`
+    ? 'https://github.com/Kiritocyz/sparkle/releases/tag/pre-release'
+    : `https://github.com/Kiritocyz/sparkle/releases/tag/${version}`
 
   const progress = Math.max(0, Math.min(100, updateStatus?.progress ?? 0))
 
