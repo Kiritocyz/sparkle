@@ -383,7 +383,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.version != '' && github.event.inputs.version || github.ref }}
-          body_path: changelog.md
+          body_path: bin/changelog.md
           files: |
             latest.yml
             bin/dist/*
