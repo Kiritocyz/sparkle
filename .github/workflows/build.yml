@@ -277,6 +277,25 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Get Upstream Prerelease Body
+        shell: bash
+        env:
+          UPSTREAM_REPO: ${{ vars.UPSTREAM_REPO }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REPO_PATH="${UPSTREAM_REPO#https://github.com/}"
+          REPO_PATH="${REPO_PATH#git@github.com:}"
+          REPO_PATH="${REPO_PATH%.git}"
+          RELEASE_DATA=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
+            "https://api.github.com/repos/$REPO_PATH/releases/tags/pre-release")
+          BODY=$(echo "$RELEASE_DATA" | jq -r '.body // empty')
+          if [ -z "$BODY" ]; then
+            echo '# 更新日志' > bin/changelog.md
+          else
+            BODY="${BODY//xishang0128/Kiritocyz}"
+            echo "$BODY" > bin/changelog.md
+          fi
+
       - name: Publish Prerelease
         if: success()
         uses: softprops/action-gh-release@v2
