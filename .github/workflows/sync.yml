@@ -14,7 +14,7 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.UPSTREAM_TOKEN }}
 
       - name: Configure Git
         run: |
@@ -35,7 +35,7 @@ jobs:
         id: upstream_tag
         env:
           UPSTREAM_REPO: ${{ vars.UPSTREAM_REPO }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPSTREAM_TOKEN: ${{ secrets.UPSTREAM_TOKEN }}
         run: |
           if [ -z "$UPSTREAM_REPO" ]; then
             echo "tag=" >> $GITHUB_OUTPUT
@@ -44,7 +44,7 @@ jobs:
           REPO_PATH="${UPSTREAM_REPO#https://github.com/}"
           REPO_PATH="${REPO_PATH#git@github.com:}"
           REPO_PATH="${REPO_PATH%.git}"
-          UPSTREAM_TAG=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
+          UPSTREAM_TAG=$(curl -s -H "Authorization: Bearer $UPSTREAM_TOKEN" \
             "https://api.github.com/repos/$REPO_PATH/tags?per_page=100" \
             | jq -r '.[].name' | grep -v pre-release | grep -E '^[0-9]+\.' | sort -V | tail -1)
           if [ -z "$UPSTREAM_TAG" ]; then
