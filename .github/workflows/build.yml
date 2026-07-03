@@ -338,12 +338,16 @@ jobs:
             exit 1
           fi
           jq --arg version "$CLEAN_VERSION" '.version = $version' package.json > tmp.json && mv tmp.json package.json
+          echo "Version set to $CLEAN_VERSION"
 
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
-          git add package.json
-          git commit -m "update version to $CLEAN_VERSION"
-          git push
+          # 只有手动触发时才 commit 和 push
+          if [ "${{ github.event.inputs.version }}" != "" ]; then
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
+            git config --global user.name "github-actions[bot]"
+            git add package.json
+            git commit -m "update version to $CLEAN_VERSION"
+            git push
+          fi
 
       - name: Install Dependencies and Updater
         run: |
