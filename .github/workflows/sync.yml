@@ -35,7 +35,7 @@ jobs:
         run: |
           UPSTREAM_REPO="${{ vars.UPSTREAM_REPO }}"
           if [ -z "$UPSTREAM_REPO" ]; then exit 0; fi
-          git fetch upstream --tags
+          git fetch upstream --tags --force
 
       - name: Merge upstream master
         run: |
