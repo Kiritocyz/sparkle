@@ -89,11 +89,8 @@ jobs:
           GIT_COMMIT_HASH=$(git rev-parse --short HEAD)
           VERSION=$(jq -r '.version' package.json)
 
-          if [ "${{ github.event.inputs.version }}" == "" ]; then
-            BASE_VERSION=$(echo $VERSION | awk -F. '{print $1"."$2"."$3+1}')
-            VERSION_PREFIX=${VERSION_PREFIX:-beta}
-            RELEASE_VERSION="${BASE_VERSION}-${VERSION_PREFIX}-${GIT_COMMIT_HASH}"
-          else
+          if [ "${{ github.event.inputs.version }}" != "" ]; then
+            # 手动触发 - 使用输入的版本
             INPUT_VERSION="${{ github.event.inputs.version }}"
             CLEAN_VERSION=$(echo "$INPUT_VERSION" | sed 's/^v//')
             if [[ ! "$CLEAN_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -101,6 +98,15 @@ jobs:
               exit 1
             fi
             RELEASE_VERSION="$CLEAN_VERSION"
+          elif [ "${{ github.ref_type }}" == "tag" ]; then
+            # Tag 推送 - 使用 tag 中的版本
+            CLEAN_VERSION=$(echo "${{ github.ref_name }}" | sed 's/^v//')
+            RELEASE_VERSION="$CLEAN_VERSION"
+          else
+            # 普通推送 - 自动递增
+            BASE_VERSION=$(echo $VERSION | awk -F. '{print $1"."$2"."$3+1}')
+            VERSION_PREFIX=${VERSION_PREFIX:-beta}
+            RELEASE_VERSION="${BASE_VERSION}-${VERSION_PREFIX}-${GIT_COMMIT_HASH}"
           fi
 
           jq --arg version "$RELEASE_VERSION" '.version = $version' package.json > tmp.json && mv tmp.json package.json
@@ -212,8 +218,8 @@ jobs:
           REPO_PATH="${UPSTREAM_REPO#https://github.com/}"
           REPO_PATH="${REPO_PATH#git@github.com:}"
           REPO_PATH="${REPO_PATH%.git}"
-          TAG="${{ github.event.inputs.version || github.ref_name }}"
-          TAG="${TAG#v}"
+          ORIGINAL_TAG="${{ github.event.inputs.version || github.ref_name }}"
+          TAG="${ORIGINAL_TAG#v}"
           RELEASE_DATA=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
             "https://api.github.com/repos/$REPO_PATH/releases/tags/$TAG")
           BODY=$(echo "$RELEASE_DATA" | jq -r '.body // empty')
@@ -221,6 +227,11 @@ jobs:
             echo '# 更新日志' > changelog.md
           else
             BODY="${BODY//xishang0128/Kiritocyz}"
+            # 如果原始 tag 带 v 前缀，替换 body 中的链接 tag 版本
+            if [[ "$ORIGINAL_TAG" == v* ]]; then
+              BODY=$(echo "$BODY" | sed "s|/tag/$TAG|/tag/v$TAG|g")
+              BODY=$(echo "$BODY" | sed "s|/download/$TAG|/download/v$TAG|g")
+            fi
             echo "$BODY" > changelog.md
           fi
 
