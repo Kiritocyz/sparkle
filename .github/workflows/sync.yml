@@ -45,8 +45,8 @@ jobs:
           REPO_PATH="${REPO_PATH#git@github.com:}"
           REPO_PATH="${REPO_PATH%.git}"
           UPSTREAM_TAG=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
-            "https://api.github.com/repos/$REPO_PATH/tags?per_page=1" \
-            | jq -r '.[].name' | grep -v pre-release | head -1)
+            "https://api.github.com/repos/$REPO_PATH/tags?per_page=100" \
+            | jq -r '.[].name' | grep -v pre-release | grep -E '^[0-9]+\.' | sort -V | tail -1)
           if [ -z "$UPSTREAM_TAG" ]; then
             echo "No upstream version tag found." >&2
             echo "tag=" >> $GITHUB_OUTPUT
