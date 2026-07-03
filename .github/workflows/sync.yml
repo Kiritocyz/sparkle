@@ -2,8 +2,8 @@ name: Sync Upstream
 permissions: write-all
 on:
   schedule:
-    - cron: '0 20 * * *'  # 每天 20:00 UTC = 北京时间次日 4:00
-  workflow_dispatch:  # 允许手动触发
+    - cron: '0 20 * * *'
+  workflow_dispatch:
 
 jobs:
   sync:
@@ -44,6 +44,12 @@ jobs:
           git checkout master
           git merge upstream/master --no-edit || git merge --strategy=recursive --strategy-option=ours upstream/master
 
+      - name: Push merged code to master
+        run: |
+          UPSTREAM_REPO="${{ vars.UPSTREAM_REPO }}"
+          if [ -z "$UPSTREAM_REPO" ]; then exit 0; fi
+          git push origin master
+
       - name: Get upstream latest tag
         id: upstream_tag
         run: |
@@ -52,7 +58,7 @@ jobs:
             echo "tag=" >> $GITHUB_OUTPUT
             exit 0
           fi
-          UPSTREAM_TAG=$(git tag -l upstream/v* | grep -v pre-release | sort -V | tail -1)
+          UPSTREAM_TAG=$(git tag -l upstream/[0-9]* | grep -v pre-release | sort -V | tail -1)
           if [ -z "$UPSTREAM_TAG" ]; then
             echo "No upstream version tag found." >&2
             echo "tag=" >> $GITHUB_OUTPUT
@@ -66,7 +72,7 @@ jobs:
       - name: Get local latest tag
         id: local_tag
         run: |
-          LOCAL_TAG=$(git tag -l v* | grep -v pre-release | sort -V | tail -1)
+          LOCAL_TAG=$(git tag -l [0-9]* | grep -v pre-release | sort -V | tail -1)
           echo "Local latest tag: $LOCAL_TAG"
           echo "tag=$LOCAL_TAG" >> $GITHUB_OUTPUT
 
@@ -84,10 +90,5 @@ jobs:
         if: steps.upstream_tag.outputs.tag != '' && steps.upstream_tag.outputs.tag != steps.local_tag.outputs.tag
         run: |
           UPSTREAM_TAG="${{ steps.upstream_tag.outputs.tag }}"
-          git tag "$UPSTREAM_TAG"
-          git push origin "$UPSTREAM_TAG"
-
-      - name: Trigger Build
-        if: steps.upstream_tag.outputs.tag != '' && steps.upstream_tag.outputs.tag != steps.local_tag.outputs.tag
-        run: |
-          echo "Tag ${{ steps.upstream_tag.outputs.tag }} pushed. Build workflow will trigger automatically."
+          git tag "v$UPSTREAM_TAG"
+          git push origin "v$UPSTREAM_TAG"
