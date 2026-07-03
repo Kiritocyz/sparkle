@@ -204,6 +204,7 @@ jobs:
       #     git log -1 --pretty=format:"%s%n%b" > changelog.md
 
       - name: Get Upstream Release Body
+        shell: bash
         env:
           UPSTREAM_REPO: ${{ vars.UPSTREAM_REPO }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
