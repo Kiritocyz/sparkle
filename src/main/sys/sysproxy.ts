@@ -18,6 +18,8 @@ import { showNotification } from '../utils/notification'
 
 let defaultBypass: string[]
 let triggerSysProxyTimer: NodeJS.Timeout | null = null
+let triggerSysProxyTask = Promise.resolve()
+let triggerSysProxyRequest = 0
 let sysproxyGuardEventsStartedAt = 0
 let lastSysproxyGuardNotificationKey = ''
 let unsubscribeSysproxyGuardEvents: (() => void) | null = null
@@ -26,20 +28,39 @@ function registryArgs(useRegistry: boolean): string[] {
   return process.platform === 'win32' && useRegistry ? ['--use-registry'] : []
 }
 
-export async function triggerSysProxy(
+export function triggerSysProxy(
   enable: boolean,
   onlyActiveDevice: boolean,
   useRegistry = false
+): Promise<void> {
+  const request = ++triggerSysProxyRequest
+  if (triggerSysProxyTimer) {
+    clearTimeout(triggerSysProxyTimer)
+    triggerSysProxyTimer = null
+  }
+  const task = triggerSysProxyTask.then(() =>
+    triggerSysProxyImpl(enable, onlyActiveDevice, useRegistry, request)
+  )
+  triggerSysProxyTask = task.catch(() => {})
+  return task
+}
+
+async function triggerSysProxyImpl(
+  enable: boolean,
+  onlyActiveDevice: boolean,
+  useRegistry: boolean,
+  request: number
 ): Promise<void> {
   if (enable) {
     if (net.isOnline()) {
       await setSysProxy(onlyActiveDevice, useRegistry)
     } else {
-      if (triggerSysProxyTimer) clearTimeout(triggerSysProxyTimer)
-      triggerSysProxyTimer = setTimeout(
-        () => triggerSysProxy(enable, onlyActiveDevice, useRegistry),
-        5000
-      )
+      if (request !== triggerSysProxyRequest) return
+      triggerSysProxyTimer = setTimeout(() => {
+        triggerSysProxy(enable, onlyActiveDevice, useRegistry).catch((error) => {
+          appendAppLog(`[Sysproxy]: retry enable failed, ${error}\n`).catch(() => {})
+        })
+      }, 5000)
     }
   } else {
     await disableSysProxy(onlyActiveDevice, useRegistry)
@@ -238,9 +259,9 @@ export function disableSysProxySync(useRegistry = false): void {
   if (process.platform !== 'win32') return
 
   try {
-    execFileSync(servicePath(), ['disable', ...registryArgs(useRegistry)], {
+    execFileSync(servicePath(), ['sysproxy', 'disable', ...registryArgs(useRegistry)], {
       stdio: 'ignore',
-      timeout: 5000
+      timeout: 3000
     })
   } catch {
     // ignore
