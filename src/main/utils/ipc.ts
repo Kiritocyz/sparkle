@@ -61,13 +61,8 @@ import {
   subStoreFrontendPort,
   subStorePort
 } from '../resolve/server'
-import {
-  quitWithoutCore,
-  restartCore,
-  startNetworkDetection,
-  stopCore,
-  stopNetworkDetection
-} from '../core/manager'
+import { quitWithoutCore, restartCore, startNetworkDetection, stopCore } from '../core/manager'
+import { stopNetworkDetection } from '../core/network'
 import {
   checkCorePermission,
   manualGrantCorePermition,
@@ -188,7 +183,7 @@ async function patchAppConfigWithServiceSync(patch: Partial<AppConfig>): Promise
     save_logs: saveLogs,
     max_log_file_size_mb: maxLogFileSizeMB
   }).catch((error) => {
-    void appendAppLog(`[Service]: sync core log config failed, ${error}\n`)
+    appendAppLog(`[Service]: sync core log config failed, ${error}\n`).catch(() => {})
   })
 
   return nextConfig

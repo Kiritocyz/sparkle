@@ -2,7 +2,7 @@ import axios, { AxiosInstance } from 'axios'
 import { getAppConfig, getControledMihomoConfig } from '../config'
 import { mainWindow } from '..'
 import WebSocket from 'ws'
-import { tray } from '../resolve/tray'
+import { customTrayWindow, tray } from '../resolve/tray'
 import { calcTraffic } from '../utils/calc'
 import { getRuntimeConfig } from './factory'
 import { floatingWindow } from '../resolve/floatingWindow'
@@ -41,16 +41,10 @@ function closeWebSocket(ws: WebSocket): void {
 export const getAxios = async (force: boolean = false): Promise<AxiosInstance> => {
   const { corePermissionMode = 'elevated' } = await getAppConfig()
   const nextMode = corePermissionMode === 'service' ? 'service' : 'direct'
-  const currentSocketPath = nextMode === 'service' ? serviceIpcPath() : mihomoIpcPath()
   const currentBaseURL =
     nextMode === 'service' ? 'http://localhost/core/controller' : 'http://localhost'
 
-  if (
-    axiosIns &&
-    (axiosIns.defaults.socketPath !== currentSocketPath ||
-      axiosIns.defaults.baseURL !== currentBaseURL ||
-      axiosMode !== nextMode)
-  ) {
+  if (axiosIns && (axiosIns.defaults.baseURL !== currentBaseURL || axiosMode !== nextMode)) {
     force = true
   }
 
@@ -62,7 +56,7 @@ export const getAxios = async (force: boolean = false): Promise<AxiosInstance> =
   } else {
     axiosIns = axios.create({
       baseURL: currentBaseURL,
-      socketPath: currentSocketPath,
+      socketPath: mihomoIpcPath(),
       timeout: 15000
     })
 
@@ -370,6 +364,9 @@ const mihomoTraffic = async (): Promise<void> => {
         )
       }
       floatingWindow?.webContents.send('mihomoTraffic', json)
+      if (customTrayWindow && !customTrayWindow.isDestroyed() && customTrayWindow.isVisible()) {
+        customTrayWindow.webContents.send('mihomoTraffic', json)
+      }
     } catch {
       // ignore
     }

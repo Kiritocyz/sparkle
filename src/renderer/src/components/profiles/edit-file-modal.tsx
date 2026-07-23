@@ -5,6 +5,7 @@ import { BaseEditor } from '../base/base-editor-lazy'
 import { getProfileStr, setProfileStr } from '@renderer/utils/ipc'
 import { useNavigate } from 'react-router-dom'
 import { useAppConfig } from '@renderer/hooks/use-app-config'
+import { notify } from '@renderer/utils/notification'
 import ConfirmModal from '../base/base-confirm'
 
 interface Props {
@@ -19,6 +20,7 @@ const EditFileModal: React.FC<Props> = (props) => {
   const [currData, setCurrData] = useState('')
   const [originalData, setOriginalData] = useState('')
   const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
   const [isDiff, setIsDiff] = useState(false)
   const [sideBySide, setSideBySide] = useState(false)
   const [isConfirmOpen, setIsConfirmOpen] = useState(false)
@@ -31,6 +33,18 @@ const EditFileModal: React.FC<Props> = (props) => {
       setIsConfirmOpen(true)
     } else {
       onClose()
+    }
+  }
+
+  const save = async (): Promise<void> => {
+    setIsSaving(true)
+    try {
+      await setProfileStr(id, currData)
+      onClose()
+    } catch (e) {
+      notify(e, { variant: 'danger' })
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -108,33 +122,26 @@ const EditFileModal: React.FC<Props> = (props) => {
               <div className="flex items-center space-x-2">
                 <Switch size="sm" isSelected={isDiff} onChange={setIsDiff}>
                   <Switch.Content>
+                    <Switch.Control>
+                      <Switch.Thumb />
+                    </Switch.Control>
                     <Label>显示修改</Label>
                   </Switch.Content>
-                  <Switch.Control>
-                    <Switch.Thumb />
-                  </Switch.Control>
                 </Switch>
                 <Switch size="sm" isSelected={sideBySide} onChange={setSideBySide}>
                   <Switch.Content>
+                    <Switch.Control>
+                      <Switch.Thumb />
+                    </Switch.Control>
                     <Label>侧边显示</Label>
                   </Switch.Content>
-                  <Switch.Control>
-                    <Switch.Thumb />
-                  </Switch.Control>
                 </Switch>
               </div>
               <div className="flex gap-2">
                 <Button size="sm" variant="secondary" onPress={handleClose}>
                   取消
                 </Button>
-                <Button
-                  size="sm"
-                  variant="primary"
-                  onPress={async () => {
-                    await setProfileStr(id, currData)
-                    onClose()
-                  }}
-                >
+                <Button size="sm" variant="primary" isPending={isSaving} onPress={() => save()}>
                   保存
                 </Button>
               </div>
