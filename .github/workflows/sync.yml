@@ -71,7 +71,9 @@ jobs:
             | grep -v -e "6d8999dd3e1cb7817aef80f9c73908026295938b" \
                       -e "24814c7fbb021d7f1c1bd9fc6044046ae406ad27")
           if [ -n "$COMMITS" ]; then
-            echo "$COMMITS" | xargs -r git cherry-pick -X ours 2>/dev/null || true
+            for commit in $COMMITS; do
+              git cherry-pick -X ours "$commit" 2>/dev/null || git cherry-pick --skip 2>/dev/null || true
+            done
           fi
           echo "Merge complete, skipped commits 6d8999dd, 24814c7f"
 
