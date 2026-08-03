@@ -40,7 +40,10 @@ export async function checkUpdate(): Promise<AppVersion | undefined> {
     url = 'https://github.com/Kiritocyz/sparkle/releases/download/pre-release/latest.yml'
   }
   const res = await axios.get(url, {
-    headers: { 'Content-Type': 'application/octet-stream' },
+    headers: {
+      'Content-Type': 'application/octet-stream',
+      ...getGitHubAuthHeaders(githubToken)
+    },
     ...(mixedPort != 0 && {
       proxy: {
         protocol: 'http',
@@ -122,7 +125,10 @@ export async function downloadAndInstallUpdate(version: string): Promise<void> {
 
   const apiUrl = `https://api.github.com/repos/Kiritocyz/sparkle/releases/tags/${releaseTag}`
   const apiRequestConfig: AxiosRequestConfig = {
-    headers: { Accept: 'application/vnd.github.v3+json' },
+    headers: {
+      Accept: 'application/vnd.github.v3+json',
+      ...getGitHubAuthHeaders(githubToken)
+    },
     ...(mixedPort != 0 && {
       proxy: {
         protocol: 'http',
@@ -162,7 +168,8 @@ export async function downloadAndInstallUpdate(version: string): Promise<void> {
           }
         }),
         headers: {
-          'Content-Type': 'application/octet-stream'
+          'Content-Type': 'application/octet-stream',
+          ...getGitHubAuthHeaders(githubToken)
         },
         cancelToken: downloadCancelToken.token,
         onDownloadProgress: (progressEvent) => {
