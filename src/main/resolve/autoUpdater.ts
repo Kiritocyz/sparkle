@@ -22,6 +22,11 @@ import { appendAppLog } from '../utils/log'
 let downloadCancelToken: CancelTokenSource | null = null
 const WINDOWS_INSTALLER_MIN_TEMP_SPACE_BYTES = 1024 * 1024 * 1024
 
+function getGitHubAuthHeaders(token?: string): Record<string, string> {
+  const normalizedToken = token?.trim()
+  return normalizedToken ? { Authorization: `Bearer ${normalizedToken}` } : {}
+}
+
 async function ensureFreeSpace(dir: string, requiredBytes: number, message: string): Promise<void> {
   const stats = await statfs(dir)
   const freeBytes = Number(BigInt(stats.bavail) * BigInt(stats.bsize))
@@ -34,7 +39,7 @@ async function ensureFreeSpace(dir: string, requiredBytes: number, message: stri
 
 export async function checkUpdate(): Promise<AppVersion | undefined> {
   const { 'mixed-port': mixedPort = 7890 } = await getControledMihomoConfig()
-  const { updateChannel = 'stable' } = await getAppConfig()
+  const { updateChannel = 'stable', githubToken } = await getAppConfig()
   let url = 'https://github.com/Kiritocyz/sparkle/releases/latest/download/latest.yml'
   if (updateChannel == 'beta') {
     url = 'https://github.com/Kiritocyz/sparkle/releases/download/pre-release/latest.yml'
@@ -103,6 +108,7 @@ export async function downloadAndInstallUpdate(version: string): Promise<void> {
     }
   }
   const { 'mixed-port': mixedPort = 7890 } = await getControledMihomoConfig()
+  const { githubToken } = await getAppConfig()
   let releaseTag = version
   if (version.includes('beta')) {
     releaseTag = 'pre-release'
