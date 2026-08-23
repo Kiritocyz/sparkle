@@ -96,6 +96,7 @@ interface AppConfig {
   autoSetDNSMode?: 'none' | 'exec' | 'service'
   originDNS?: string
   useWindowFrame: boolean
+  enableWindowDrag: boolean
   proxyInTray: boolean
   trayProxyDelayLayout?: 'same-line' | 'new-line'
   siderOrder: string[]
