@@ -1,4 +1,4 @@
-name: Build
+name: MyBuild
 permissions: write-all
 on:
   workflow_dispatch:
@@ -281,7 +281,7 @@ jobs:
           REPO_PATH="${REPO_PATH#git@github.com:}"
           REPO_PATH="${REPO_PATH%.git}"
           RELEASE_DATA=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
-            "https://api.github.com/repos/$REPO_PATH/releases/tags/pre-release")
+            "https://api.github.com/repos/$REPO_PATH/releases/tags/rolling")
           BODY=$(echo "$RELEASE_DATA" | jq -r '.body // empty')
           if [ -z "$BODY" ]; then
             echo '# 更新日志' > bin/changelog.md

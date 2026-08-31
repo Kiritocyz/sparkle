@@ -66,17 +66,8 @@ jobs:
           UPSTREAM_REPO="${{ vars.UPSTREAM_REPO }}"
           if [ -z "$UPSTREAM_REPO" ]; then exit 0; fi
           git checkout master
-          MERGE_BASE=$(git merge-base master upstream/master)
-          COMMITS=$(git rev-list --reverse "$MERGE_BASE..upstream/master" \
-            | grep -v -e "6d8999dd3e1cb7817aef80f9c73908026295938b" \
-                      -e "24814c7fbb021d7f1c1bd9fc6044046ae406ad27" \
-                      -e "68368b4e14b59f4126372ccb20379570538f3cef")
-          if [ -n "$COMMITS" ]; then
-            for commit in $COMMITS; do
-              git cherry-pick -X ours "$commit" 2>/dev/null || git cherry-pick --skip 2>/dev/null || true
-            done
-          fi
-          echo "Merge complete, skipped commits 6d8999dd, 24814c7f"
+          git merge upstream/master --no-edit -X ours
+          echo "Merge complete"
 
       - name: Push merged code to master
         run: |
