@@ -1,14 +1,10 @@
 name: MyBuild
 permissions: write-all
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
-      channel:
-        description: 'Build channel'
-        required: true
-        type: string
       version:
-        description: 'Stable version without the v prefix'
+        description: 'Tag version to release'
         required: false
   push:
     branches:
@@ -88,9 +84,6 @@ jobs:
         run: npm install -g pnpm
 
       - name: Determine and Update Version
-        env:
-          BUILD_CHANNEL: ${{ inputs.channel }}
-          INPUT_VERSION: ${{ inputs.version }}
         shell: bash
         run: |
           GIT_COMMIT_HASH=$(git rev-parse --short HEAD)
@@ -237,8 +230,6 @@ jobs:
           fi
 
       - name: Generate latest.yml
-        env:
-          RELEASE_TAG: ${{ inputs.release_tag }}
         shell: bash
         run: SKIP_CHANGELOG=1 pnpm updater
 
