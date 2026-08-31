@@ -244,7 +244,7 @@ jobs:
             latest.yml
             changelog.md
 
-  pre-release:
+  rolling:
     needs: [build]
     runs-on: ubuntu-latest
     steps:
@@ -261,13 +261,13 @@ jobs:
         uses: 8Mi-Tech/delete-release-assets-action@main
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: pre-release
+          tag: rolling
           deleteOnlyFromDrafts: false
 
       - name: Tag Repo
         uses: richardsimko/update-tag@v1
         with:
-          tag_name: pre-release
+          tag_name: rolling
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -294,7 +294,7 @@ jobs:
         if: success()
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: pre-release
+          tag_name: rolling
           body_path: bin/changelog.md
           files: |
             bin/latest.yml

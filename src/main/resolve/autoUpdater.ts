@@ -22,8 +22,8 @@ import { appendAppLog } from '../utils/log'
 let downloadCancelToken: CancelTokenSource | null = null
 const WINDOWS_INSTALLER_MIN_TEMP_SPACE_BYTES = 1024 * 1024 * 1024
 const UPDATE_MANIFEST_URLS: Record<AppUpdateChannel, string> = {
-  stable: 'https://github.com/xishang0128/sparkle/releases/latest/download/latest.yml',
-  rolling: 'https://github.com/xishang0128/sparkle/releases/download/rolling/latest.yml'
+  stable: 'https://github.com/Kiritocyz/sparkle/releases/latest/download/latest.yml',
+  rolling: 'https://github.com/Kiritocyz/sparkle/releases/download/rolling/latest.yml'
 }
 
 function getGitHubAuthHeaders(token?: string): Record<string, string> {
@@ -35,11 +35,6 @@ function resolveReleaseTag(version: string, tag?: string): string {
   if (tag) return tag
   if (version.includes('-rolling-')) return 'rolling'
   return version
-}
-
-function getGitHubAuthHeaders(token?: string): Record<string, string> {
-  const normalizedToken = token?.trim()
-  return normalizedToken ? { Authorization: `Bearer ${normalizedToken}` } : {}
 }
 
 async function ensureFreeSpace(dir: string, requiredBytes: number, message: string): Promise<void> {
@@ -55,10 +50,7 @@ async function ensureFreeSpace(dir: string, requiredBytes: number, message: stri
 export async function checkUpdate(): Promise<AppVersion | undefined> {
   const { 'mixed-port': mixedPort = 7890 } = await getControledMihomoConfig()
   const { updateChannel = 'stable', githubToken } = await getAppConfig()
-  let url = 'https://github.com/Kiritocyz/sparkle/releases/latest/download/latest.yml'
-  if (updateChannel == 'beta') {
-    url = 'https://github.com/Kiritocyz/sparkle/releases/download/pre-release/latest.yml'
-  }
+  const url = UPDATE_MANIFEST_URLS[updateChannel]
   const res = await axios.get(url, {
     headers: {
       'Content-Type': 'application/octet-stream',
@@ -124,10 +116,7 @@ export async function downloadAndInstallUpdate(version: string, tag?: string): P
   }
   const { 'mixed-port': mixedPort = 7890 } = await getControledMihomoConfig()
   const { githubToken } = await getAppConfig()
-  let releaseTag = version
-  if (version.includes('beta')) {
-    releaseTag = 'pre-release'
-  }
+  const releaseTag = resolveReleaseTag(version, tag)
   const baseUrl = `https://github.com/Kiritocyz/sparkle/releases/download/${releaseTag}/`
   const fileMap: Record<string, string> = {
     'win32-x64': `sparkle-windows-${version}-x64-setup.exe`,
