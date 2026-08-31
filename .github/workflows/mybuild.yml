@@ -105,7 +105,7 @@ jobs:
           else
             # 普通推送 - 自动递增
             BASE_VERSION=$(echo $VERSION | awk -F. '{print $1"."$2"."$3+1}')
-            VERSION_PREFIX=${VERSION_PREFIX:-beta}
+            VERSION_PREFIX=${VERSION_PREFIX:-rolling}
             RELEASE_VERSION="${BASE_VERSION}-${VERSION_PREFIX}-${GIT_COMMIT_HASH}"
           fi
 
