@@ -21,6 +21,21 @@ import { appendAppLog } from '../utils/log'
 
 let downloadCancelToken: CancelTokenSource | null = null
 const WINDOWS_INSTALLER_MIN_TEMP_SPACE_BYTES = 1024 * 1024 * 1024
+const UPDATE_MANIFEST_URLS: Record<AppUpdateChannel, string> = {
+  stable: 'https://github.com/xishang0128/sparkle/releases/latest/download/latest.yml',
+  rolling: 'https://github.com/xishang0128/sparkle/releases/download/rolling/latest.yml'
+}
+
+function getGitHubAuthHeaders(token?: string): Record<string, string> {
+  const normalizedToken = token?.trim()
+  return normalizedToken ? { Authorization: `Bearer ${normalizedToken}` } : {}
+}
+
+function resolveReleaseTag(version: string, tag?: string): string {
+  if (tag) return tag
+  if (version.includes('-rolling-')) return 'rolling'
+  return version
+}
 
 function getGitHubAuthHeaders(token?: string): Record<string, string> {
   const normalizedToken = token?.trim()
@@ -90,7 +105,7 @@ async function ensureWindowsInstallerTempSpace(): Promise<void> {
   await ensureFreeSpace(tempDir, WINDOWS_INSTALLER_MIN_TEMP_SPACE_BYTES, '临时目录空间不足')
 }
 
-export async function downloadAndInstallUpdate(version: string): Promise<void> {
+export async function downloadAndInstallUpdate(version: string, tag?: string): Promise<void> {
   let appUpdateInstalling = false
   let sysProxyPaused = false
   const pauseSysProxy = async (): Promise<void> => {

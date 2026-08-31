@@ -7,6 +7,7 @@ const { version } = JSON.parse(pkg)
 const downloadUrl = `https://github.com/Kiritocyz/sparkle/releases/download/${version}`
 const latest = {
   version,
+  tag,
   changelog
 }
 
