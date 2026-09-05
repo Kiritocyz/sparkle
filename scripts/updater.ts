@@ -5,7 +5,7 @@ const pkg = readFileSync('package.json', 'utf-8')
 let changelog = readFileSync('changelog.md', 'utf-8')
 const { version } = JSON.parse(pkg)
 const tag = process.env.RELEASE_TAG || version
-const downloadUrl = `https://github.com/xishang0128/sparkle/releases/download/${tag}`
+const downloadUrl = `https://github.com/Kiritocyz/sparkle/releases/download/${tag}`
 const latest = {
   version,
   tag,
