@@ -66,13 +66,36 @@ jobs:
           UPSTREAM_REPO="${{ vars.UPSTREAM_REPO }}"
           if [ -z "$UPSTREAM_REPO" ]; then exit 0; fi
           git checkout master
-          git merge upstream/master --no-edit -X ours
+          # 合并上游，冲突时优先采用上游版本；--no-commit 保持"合并进行中"状态，
+          # 便于在冲突存在时恢复自定义文件。
+          git merge upstream/master --no-edit --no-commit -X theirs
+          # 仅当确实发生了合并（存在 MERGE_HEAD）时才恢复自定义文件，
+          # 避免"Already up to date"时误执行 commit 报错。
+          if [ -f .git/MERGE_HEAD ]; then
+            # gistApi.ts 包含自定义逻辑（用 curl 替换 axios 等），整文件保留我方版本
+            git checkout --ours -- src/main/resolve/gistApi.ts
+            # 其余品牌文件跟随上游，仅把品牌字符串替换回我方（Kiritocyz）
+            sed -i \
+              -e 's/xishang0128/Kiritocyz/g' \
+              -e 's/xishang02@gmail.com/mikehand99@outlook.com/g' \
+              electron-builder.yml \
+              package.json \
+              scripts/updater.ts \
+              src/main/resolve/autoUpdater.ts \
+              src/main/resolve/menu.ts \
+              src/renderer/src/components/base/base-error-boundary.tsx \
+              src/renderer/src/components/updater/updater-drawer.tsx \
+              src/renderer/src/pages/settings.tsx
+            git add .
+            git commit --no-edit
+          fi
           echo "Merge complete"
 
       - name: Push merged code to master
         run: |
           UPSTREAM_REPO="${{ vars.UPSTREAM_REPO }}"
           if [ -z "$UPSTREAM_REPO" ]; then exit 0; fi
+          # 普通 merge 是追加提交，不改写历史，用普通 push 即可
           git push origin master
 
       - name: Push new tag if not exists
