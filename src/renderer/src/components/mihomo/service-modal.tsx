@@ -210,7 +210,7 @@ const ServiceModal: React.FC<Props> = (props) => {
 
                 <Divider />
 
-                <div className="text-xs text-default-500 space-y-2">
+               <div className="text-xs text-default-500 space-y-2">
                   <div className="flex items-start gap-2">
                     <span>
                       {systemCoreOnlyBuild

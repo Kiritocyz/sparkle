@@ -193,7 +193,7 @@ const Mihomo: React.FC = () => {
         />
       )}
       <SettingCard>
-        <SettingItem
+        {systemCoreOnlyBuild ? null : (<SettingItem
           compatKey="legacy"
           title="内核版本"
           actions={
@@ -211,26 +211,22 @@ const Mihomo: React.FC = () => {
           }
           divider
         >
-          {systemCoreOnlyBuild ? (
-            <span className="text-sm text-foreground-600">系统内核</span>
-          ) : (
-            <Select
-              aria-label="内核版本"
-              classNames={{ trigger: 'data-[hover=true]:bg-default-200' }}
-              className="w-37.5"
-              size="sm"
-              selectedKeys={new Set([core])}
-              disallowEmptySelection={true}
-              onSelectionChange={(v) =>
-                handleCoreChange(v.currentKey as 'mihomo' | 'mihomo-alpha' | 'system')
-              }
-            >
-              <SelectItem key="mihomo">内置稳定版</SelectItem>
-              <SelectItem key="mihomo-alpha">内置预览版</SelectItem>
-              <SelectItem key="system">使用系统内核</SelectItem>
-            </Select>
-          )}
-        </SettingItem>
+          <Select
+            aria-label="内核版本"
+            classNames={{ trigger: 'data-[hover=true]:bg-default-200' }}
+            className="w-37.5"
+            size="sm"
+            selectedKeys={new Set([core])}
+            disallowEmptySelection={true}
+            onSelectionChange={(v) =>
+              handleCoreChange(v.currentKey as 'mihomo' | 'mihomo-alpha' | 'system')
+            }
+          >
+            <SelectItem key="mihomo">内置稳定版</SelectItem>
+            <SelectItem key="mihomo-alpha">内置预览版</SelectItem>
+            <SelectItem key="system">使用系统内核</SelectItem>
+          </Select>
+        </SettingItem>)}
         {core === 'system' && (
           <SettingItem compatKey="legacy" title="系统内核路径选择" divider>
             <Select

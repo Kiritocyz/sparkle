@@ -498,6 +498,11 @@ const tasks: Task[] = [
   }
 ]
 
+if (systemCoreOnlyBuild) {
+  tasks.splice(0, 2)
+  console.log('[INFO]: System-core-only build: skipping mihomo downloads')
+}
+
 async function runTask() {
   const task = tasks.shift()
   if (!task) return
