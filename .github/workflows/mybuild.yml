@@ -218,7 +218,16 @@ jobs:
           REPO_PATH="${UPSTREAM_REPO#https://github.com/}"
           REPO_PATH="${REPO_PATH#git@github.com:}"
           REPO_PATH="${REPO_PATH%.git}"
-          TAG="${{ github.event.inputs.version || github.ref_name }}"
+          if [ "${{ github.event.inputs.version }}" != "" ]; then
+            # 手动触发 - 使用输入的版本作为 tag
+            TAG="${{ github.event.inputs.version }}"
+          elif [ "${{ github.ref_type }}" == "tag" ]; then
+            # Tag 推送 - 使用 tag 名称
+            TAG="${{ github.ref_name }}"
+          else
+            # 分支推送（滚动构建）- 使用 rolling 作为 tag
+            TAG="rolling"
+          fi
           RELEASE_DATA=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
             "https://api.github.com/repos/$REPO_PATH/releases/tags/$TAG")
           BODY=$(echo "$RELEASE_DATA" | jq -r '.body // empty')
@@ -231,7 +240,14 @@ jobs:
 
       - name: Generate latest.yml
         shell: bash
-        run: SKIP_CHANGELOG=1 pnpm updater
+        run: |
+          if [ "${{ github.event.inputs.version }}" != "" ] || [ "${{ github.ref_type }}" == "tag" ]; then
+            # 稳定版：不设 RELEASE_TAG，沿用 updater 默认（用版本号作 tag）
+            SKIP_CHANGELOG=1 pnpm updater
+          else
+            # 分支推送 = 滚动构建：强制以 "rolling" 作为 release tag
+            RELEASE_TAG=rolling SKIP_CHANGELOG=1 pnpm updater
+          fi
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v7
