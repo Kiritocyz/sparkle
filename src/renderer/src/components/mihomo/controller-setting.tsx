@@ -85,7 +85,7 @@ const ControllerSetting: React.FC = () => {
             </Button>
           )}
           <Tooltip isOpen={!!externalControllerError} delay={0}>
-            <Tooltip.Trigger>
+            <Tooltip.Trigger className="block w-50">
               <Input
                 value={externalControllerInput}
                 onChange={(event) => {
@@ -271,7 +271,7 @@ const ControllerSetting: React.FC = () => {
                     <Select.Value />
                     <Select.Indicator />
                   </Select.Trigger>
-                  <Select.Popover>
+                  <Select.Popover placement="bottom" shouldFlip containerPadding={56}>
                     <ListBox>
                       <ListBox.Item
                         key="https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip"
